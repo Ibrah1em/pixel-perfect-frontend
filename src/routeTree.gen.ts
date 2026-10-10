@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ExamRouteImport } from './routes/exam'
 import { Route as ExamsRouteImport } from './routes/exams'
-import { Route as QuestionsRouteImport } from './routes/questions'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as TeacherRouteImport } from './routes/teacher'
 
@@ -31,11 +30,6 @@ const ExamsRoute = ExamsRouteImport.update({
   path: '/exams',
   getParentRoute: () => rootRouteImport,
 } as any)
-const QuestionsRoute = QuestionsRouteImport.update({
-  id: '/questions',
-  path: '/questions',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
@@ -51,7 +45,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/exam': typeof ExamRoute
   '/exams': typeof ExamsRoute
-  '/questions': typeof QuestionsRoute
   '/results': typeof ResultsRoute
   '/teacher': typeof TeacherRoute
 }
@@ -59,7 +52,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/exam': typeof ExamRoute
   '/exams': typeof ExamsRoute
-  '/questions': typeof QuestionsRoute
   '/results': typeof ResultsRoute
   '/teacher': typeof TeacherRoute
 }
@@ -68,30 +60,21 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/exam': typeof ExamRoute
   '/exams': typeof ExamsRoute
-  '/questions': typeof QuestionsRoute
   '/results': typeof ResultsRoute
   '/teacher': typeof TeacherRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/exam' | '/exams' | '/questions' | '/results' | '/teacher'
+  fullPaths: '/' | '/exam' | '/exams' | '/results' | '/teacher'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/exam' | '/exams' | '/questions' | '/results' | '/teacher'
-  id:
-    | '__root__'
-    | '/'
-    | '/exam'
-    | '/exams'
-    | '/questions'
-    | '/results'
-    | '/teacher'
+  to: '/' | '/exam' | '/exams' | '/results' | '/teacher'
+  id: '__root__' | '/' | '/exam' | '/exams' | '/results' | '/teacher'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExamRoute: typeof ExamRoute
   ExamsRoute: typeof ExamsRoute
-  QuestionsRoute: typeof QuestionsRoute
   ResultsRoute: typeof ResultsRoute
   TeacherRoute: typeof TeacherRoute
 }
@@ -119,13 +102,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExamsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/questions': {
-      id: '/questions'
-      path: '/questions'
-      fullPath: '/questions'
-      preLoaderRoute: typeof QuestionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/results': {
       id: '/results'
       path: '/results'
@@ -147,7 +123,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExamRoute: ExamRoute,
   ExamsRoute: ExamsRoute,
-  QuestionsRoute: QuestionsRoute,
   ResultsRoute: ResultsRoute,
   TeacherRoute: TeacherRoute,
 }
