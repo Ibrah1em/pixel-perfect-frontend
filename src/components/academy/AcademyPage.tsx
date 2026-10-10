@@ -24,10 +24,15 @@ export function AcademyPage({ page, markup }: { page: Page; markup?: string }) {
   useEffect(() => { if (page !== 'exam') return; const timer = setInterval(() => setSeconds(s => Math.max(0,s-1)),1000); return () => clearInterval(timer); }, [page]);
   useEffect(() => {
     if (page !== 'exam') return;
+    const timer = root.current?.querySelector<HTMLElement>('[data-exam-timer]');
+    if (timer) timer.textContent = `${Math.floor(seconds / 60).toString().padStart(2,'0')}:${(seconds % 60).toString().padStart(2,'0')}`;
+  }, [page, seconds, question]);
+  useEffect(() => {
+    if (page !== 'exam') return;
     const el = root.current;
     if (!el) return;
     for (const span of el.querySelectorAll('span')) {
-      if (/^24:12$|^\d{2}:\d{2}$/.test(span.textContent?.trim() || '')) span.textContent = `${Math.floor(seconds / 60).toString().padStart(2,'0')}:${(seconds % 60).toString().padStart(2,'0')}`;
+      if (/^24:12$|^\d{2}:\d{2}$/.test(span.textContent?.trim() || '')) span.setAttribute('data-exam-timer','true');
       if (/^السؤال رقم/.test(span.textContent?.trim() || '')) span.textContent = `السؤال رقم ${question}`;
     }
     el.querySelectorAll<HTMLInputElement>('input[name="physics-answer"]').forEach(input => {
@@ -38,7 +43,7 @@ export function AcademyPage({ page, markup }: { page: Page; markup?: string }) {
       const n = Number(button.textContent?.trim());
       if (n >= 1 && n <= 10) { button.classList.toggle('question-active',n === question); button.classList.toggle('question-flagged',flags.includes(n)); }
     });
-  }, [page, question, seconds, answers, flags]);
+  }, [page, question, answers, flags]);
 
   const rendered = useMemo(() => {
     const options: HTMLReactParserOptions = { replace(node) {
