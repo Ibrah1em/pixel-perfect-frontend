@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
-import { useSession, setResponseHeader, getRequestUrl } from '@tanstack/react-start/server';
+import { useSession, setResponseHeader } from '@tanstack/react-start/server';
 import { redirect } from '@tanstack/react-router';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
@@ -8,7 +8,7 @@ export const teacherCredentials = z.object({ username: z.string().min(1).max(100
 function sessionConfig() {
   const password = process.env['SESSION_SECRET'];
   if (!password) throw new Error('Teacher access is unavailable');
-  return { password, name: 'physics-teacher', maxAge: 60 * 60 * 4, cookie: { httpOnly: true, secure: getRequestUrl().protocol === 'https:', sameSite: 'lax' as const, path: '/' } };
+  return { password, name: 'physics-teacher', maxAge: 60 * 60 * 4, cookie: { httpOnly: true, secure: true, sameSite: 'none' as const, partitioned: true, path: '/' } };
 }
 function matches(input: string, expected: string) {
   return timingSafeEqual(createHash('sha256').update(input).digest(), createHash('sha256').update(expected).digest());
