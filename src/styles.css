@@ -343,4 +343,13 @@ body { font-family:"Noto Sans", "Noto Sans Arabic", sans-serif; background:var(-
 button.question-active { background:var(--primary-container); color:var(--on-primary-container); }
 button.question-flagged:not(.question-active) { background:color-mix(in oklab,var(--secondary-container) 25%,var(--surface-container)); }
 .bank-heading { padding:20px 32px; padding-top:80px; font-size:24px; color:var(--primary); }
+@media (max-width:767px) {
+  .academy-page header { right:auto; left:auto; width:100%; padding:12px 16px; flex-wrap:wrap; gap:12px; }
+  .academy-page header > div { min-width:0; padding:0; }
+  .academy-page header .font-headline-sm { font-size:16px; line-height:26px; }
+  .academy-page main > div:first-child.flex { flex-wrap:wrap; gap:16px; }
+  .academy-page .flex { min-width:0; }
+  .academy-page [class*="col-span-"] { min-width:0; }
+  .academy-page .w-64 { max-width:100%; }
+}
 @media print { header, aside, footer, button, .academy-notice { display:none !important; } .academy-page > .pr-72 { padding-right:0; } }
