@@ -14,13 +14,97 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      physics_answer_keys: {
+        Row: {
+          correct_index: number
+          question_id: string
+        }
+        Insert: {
+          correct_index: number
+          question_id: string
+        }
+        Update: {
+          correct_index?: number
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "physics_answer_keys_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "physics_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      physics_exams: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          id: string
+          question_count: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes: number
+          id: string
+          question_count: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          question_count?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      physics_questions: {
+        Row: {
+          exam_id: string
+          id: string
+          image_path: string | null
+          marks: number
+          options: Json
+          position: number
+          text: string
+        }
+        Insert: {
+          exam_id: string
+          id: string
+          image_path?: string | null
+          marks: number
+          options: Json
+          position: number
+          text: string
+        }
+        Update: {
+          exam_id?: string
+          id?: string
+          image_path?: string | null
+          marks?: number
+          options?: Json
+          position?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "physics_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "physics_exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      publish_physics_exam: { Args: { payload: Json }; Returns: string }
     }
     Enums: {
       [_ in never]: never
