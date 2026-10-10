@@ -338,3 +338,9 @@ body { font-family:"Noto Sans", "Noto Sans Arabic", sans-serif; background:var(-
  .academy-page footer > div { flex-wrap:wrap; gap:16px; }
 }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
+
+.mcq-option.answer-selected { background:color-mix(in oklab,var(--primary) 10%,var(--surface-container-high)); outline:1px solid var(--primary-container); }
+button.question-active { background:var(--primary-container); color:var(--on-primary-container); }
+button.question-flagged:not(.question-active) { background:color-mix(in oklab,var(--secondary-container) 25%,var(--surface-container)); }
+.bank-heading { padding:20px 32px; padding-top:80px; font-size:24px; color:var(--primary); }
+@media print { header, aside, footer, button, .academy-notice { display:none !important; } .academy-page > .pr-72 { padding-right:0; } }
