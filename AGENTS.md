@@ -10,5 +10,7 @@
 <!-- LOVABLE:END -->
 
 - Keep uploaded reference page markup in browser-safe source modules and render through a shared React adapter, so layout fidelity and interactions stay consistent across pages.
-- Use separate TanStack leaf routes for login, exam portal, workspace, results, teacher, and question bank so each screen is directly addressable.
-- Keep this academy implementation frontend-only with explicitly demonstrative interactions; do not imply role selection is secure authentication or reports are persisted.
+- Use the root route for the minimal exams screen; keep exam and results routes for the existing exam flow, and redirect the legacy exams URL to root.
+- Teacher markup must be loaded only inside a session-gated server function, never statically imported by client code, so locked visitors cannot retrieve it.
+- Verify shared teacher credentials using server-only secrets and timing-safe comparisons; use encrypted HttpOnly sessions for access, not browser storage.
+- Keep exam/report interactions demonstrative until persistence is explicitly requested; the teacher gate is real server-side protection.

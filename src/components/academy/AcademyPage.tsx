@@ -3,16 +3,13 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import parse, { attributesToProps, domToReact, Element, type DOMNode, type HTMLReactParserOptions } from 'html-react-parser';
 import { Button } from '@/components/ui/button';
 import result from './page-1';
-import teacher from './page-2';
-import login from './page-3';
 import exam from './page-4';
-import student from './page-5';
 
-const pages = { login, student, exam, result, teacher };
+const pages = { exam, result, teacher: '' };
 type Page = keyof typeof pages;
-const destinations = { 'الرئيسية': '/exams', 'بنك الأسئلة': '/questions', 'لوحة المعلم': '/teacher', 'دخول الطلاب': '/', 'بيئة الاختبار التفاعلي': '/exam' } as const;
+const destinations = { 'الرئيسية': '/', 'لوحة المعلم': '/teacher', 'دخول الطلاب': '/', 'بيئة الاختبار التفاعلي': '/exam' } as const;
 
-export function AcademyPage({ page, questionBank = false }: { page: Page; questionBank?: boolean }) {
+export function AcademyPage({ page, markup }: { page: Page; markup?: string }) {
   const navigate = useNavigate();
   const root = useRef<HTMLDivElement>(null);
   const [notice, setNotice] = useState('');
@@ -27,10 +24,15 @@ export function AcademyPage({ page, questionBank = false }: { page: Page; questi
   useEffect(() => { if (page !== 'exam') return; const timer = setInterval(() => setSeconds(s => Math.max(0,s-1)),1000); return () => clearInterval(timer); }, [page]);
   useEffect(() => {
     if (page !== 'exam') return;
+    const timer = root.current?.querySelector<HTMLElement>('[data-exam-timer]');
+    if (timer) timer.textContent = `${Math.floor(seconds / 60).toString().padStart(2,'0')}:${(seconds % 60).toString().padStart(2,'0')}`;
+  }, [page, seconds, question]);
+  useEffect(() => {
+    if (page !== 'exam') return;
     const el = root.current;
     if (!el) return;
     for (const span of el.querySelectorAll('span')) {
-      if (/^24:12$|^\d{2}:\d{2}$/.test(span.textContent?.trim() || '')) span.textContent = `${Math.floor(seconds / 60).toString().padStart(2,'0')}:${(seconds % 60).toString().padStart(2,'0')}`;
+      if (/^24:12$|^\d{2}:\d{2}$/.test(span.textContent?.trim() || '')) span.setAttribute('data-exam-timer','true');
       if (/^السؤال رقم/.test(span.textContent?.trim() || '')) span.textContent = `السؤال رقم ${question}`;
     }
     el.querySelectorAll<HTMLInputElement>('input[name="physics-answer"]').forEach(input => {
@@ -41,7 +43,7 @@ export function AcademyPage({ page, questionBank = false }: { page: Page; questi
       const n = Number(button.textContent?.trim());
       if (n >= 1 && n <= 10) { button.classList.toggle('question-active',n === question); button.classList.toggle('question-flagged',flags.includes(n)); }
     });
-  }, [page, question, seconds, answers, flags]);
+  }, [page, question, answers, flags]);
 
   const rendered = useMemo(() => {
     const options: HTMLReactParserOptions = { replace(node) {
@@ -52,6 +54,7 @@ export function AcademyPage({ page, questionBank = false }: { page: Page; questi
       }
       if (node.name === 'a') {
         const text = node.children.map(n => 'data' in n ? n.data : n instanceof Element ? n.children.map(c => 'data' in c ? c.data : '').join('') : '').join('').trim();
+        if (text.includes('بنك الأسئلة') || text.includes('دخول الطلاب')) return <></>;
         const entry = Object.entries(destinations).find(([label]) => text.includes(label));
         if (entry) return <Link to={entry[1]} className={node.attribs['class']}>{domToReact(node.children as DOMNode[],options)}</Link>;
         return <Button variant="reference" className={node.attribs['class']} onClick={() => notify('الثوابت: c = 3×10⁸ m/s • h = 6.626×10⁻³⁴ J·s • g = 9.8 m/s²')}>{domToReact(node.children as DOMNode[],options)}</Button>;
@@ -72,8 +75,8 @@ export function AcademyPage({ page, questionBank = false }: { page: Page; questi
       if (node.name === 'form') return <form {...attributesToProps(node.attribs)} onSubmit={submit}>{domToReact(node.children as DOMNode[],options)}</form>;
       return undefined;
     }};
-    return parse(pages[page],options);
-  }, [page, question]);
+    return parse((markup ?? pages[page]).replaceAll('أكاديمية الفيزياء', 'physics'),options);
+  }, [page, question, markup]);
 
   function filterStudents(search?: string, value?: string) {
     const input = root.current?.querySelector<HTMLInputElement>('input[placeholder^="بحث"]');
@@ -86,10 +89,6 @@ export function AcademyPage({ page, questionBank = false }: { page: Page; questi
   }
   function submit(e: FormEvent) {
     e.preventDefault();
-    if (page === 'login') {
-      const group = root.current?.querySelector<HTMLInputElement>('#class-group')?.value || '';
-      navigate({to:group.includes('TEACH') || group.includes('معلم') ? '/teacher' : '/exams'});
-    } else if (page === 'student') navigate({to:'/exam'});
   }
   function modal(id: string, show: boolean) {
     const el = root.current?.querySelector<HTMLElement>(`#${id}`);
@@ -109,16 +108,6 @@ export function AcademyPage({ page, questionBank = false }: { page: Page; questi
     if (!button) return;
     const text = button.textContent?.trim() || '';
     if (text.includes('volume_up') || text.includes('volume_off')) { setMuted(!muted); const s=button.querySelector('span'); if(s) s.textContent=muted?'volume_up':'volume_off'; notify(muted?'تم تشغيل الصوت':'تم كتم الصوت'); return; }
-    if (page === 'login' && (text.includes('تجربة سريعة') || text.includes('دخول المعلم'))) {
-      const name = root.current?.querySelector<HTMLInputElement>('#user-name'); const group = root.current?.querySelector<HTMLInputElement>('#class-group');
-      if(name && group) { name.value=text.includes('دخول المعلم')?'أ. محمد فاروق':'أحمد محمود إبراهيم'; group.value=text.includes('دخول المعلم')?'PHY-TEACH-900':'3/1 علمي'; }
-      return;
-    }
-    if (page === 'student') {
-      if (text.includes('بدء الامتحان')) { modal('verification-modal',true); return; }
-      if (text.includes('إلغاء') || text === 'close') { modal('verification-modal',false); return; }
-      if (text.includes('عرض نموذج')) { navigate({to:'/results'}); return; }
-    }
     if (page === 'exam') {
       const n=Number(text); if(n>=1 && n<=10) { setQuestion(n); return; }
       if(text.includes('السابق')) { setQuestion(q=>Math.max(1,q-1)); return; }
@@ -147,7 +136,6 @@ export function AcademyPage({ page, questionBank = false }: { page: Page; questi
     if(button.type!=='submit') notify('تم تحديث العرض في الجلسة التجريبية');
   }
   return <div className="academy-page" ref={root} onClick={click} onInput={e=>{ if(e.target instanceof HTMLInputElement && e.target.placeholder.startsWith('بحث')) filterStudents(e.target.value); }}>
-    {questionBank && <div className="bank-heading">بنك الأسئلة الفيزيائية</div>}
     {rendered}
     {notice && <div role="status" className="academy-notice">{notice}</div>}
     {confirm && <div role="dialog" aria-modal="true" aria-label="إنهاء الاختبار" className="academy-dialog"><div className="academy-dialog-box"><h2>تأكيد تسليم الامتحان</h2><p>هل تريد إنهاء الاختبار وعرض تحليل الإجابات؟</p><div className="dialog-actions"><Button onClick={()=>navigate({to:'/results'})}>تسليم وعرض النتيجة</Button><Button variant="secondary" onClick={()=>setConfirm(false)}>متابعة الاختبار</Button></div></div></div>}
