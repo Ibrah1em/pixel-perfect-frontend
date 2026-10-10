@@ -13,4 +13,6 @@
 - Use the root route for the minimal exams screen; keep exam and results routes for the existing exam flow, and redirect the legacy exams URL to root.
 - Teacher markup must be loaded only inside a session-gated server function, never statically imported by client code, so locked visitors cannot retrieve it.
 - Verify shared teacher credentials using server-only secrets and timing-safe comparisons; use encrypted HttpOnly sessions for access, not browser storage.
+- Shared teacher session cookies use Secure, SameSite=None, and Partitioned to survive the cross-site embedded preview without trusting proxy URL schemes.
+- Keep ambient physics animation in a dedicated canvas with bounded pixel ratio/frame rate and visibility/reduced-motion handling to avoid React animation re-renders.
 - Keep exam/report interactions demonstrative until persistence is explicitly requested; the teacher gate is real server-side protection.

@@ -358,7 +358,8 @@ button.question-flagged:not(.question-active) { background:color-mix(in oklab,va
 }
 @media print { header, aside, footer, button, .academy-notice { display:none !important; } .academy-page > .pr-72 { padding-right:0; } }
 
-.physics-home { --surface:oklch(.19 .006 240); --on-surface:oklch(.94 .006 240); --surface-container:oklch(.235 .008 240); --primary:oklch(.81 .064 178); --primary-foreground:oklch(.22 .025 178); --foreground:var(--on-surface); --border:oklch(.34 .012 240); --muted-foreground:oklch(.68 .016 240); --accent:oklch(.29 .016 178); --accent-foreground:var(--on-surface); --error:oklch(.8 .1 25); min-height:100dvh; display:flex; flex-direction:column; background:var(--surface); color:var(--on-surface); }
+.physics-home { --surface:oklch(.19 .006 240); --on-surface:oklch(.94 .006 240); --surface-container:oklch(.235 .008 240); --primary:oklch(.81 .064 178); --primary-foreground:oklch(.22 .025 178); --foreground:var(--on-surface); --border:oklch(.34 .012 240); --muted-foreground:oklch(.68 .016 240); --accent:oklch(.29 .016 178); --accent-foreground:var(--on-surface); --error:oklch(.8 .1 25); --motion-wire:oklch(.67 .06 178 / .24); --motion-signal:oklch(.85 .1 178 / .8); --motion-warm:oklch(.8 .1 80 / .35); min-height:100dvh; display:flex; flex-direction:column; background:var(--surface); color:var(--on-surface); position:relative; isolation:isolate; }
+.physics-motion { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:-1; }
 .physics-header { border-bottom:1px solid var(--border); padding:24px max(24px,calc((100% - 1080px)/2)); }
 .physics-brand { display:inline-flex; align-items:center; gap:12px; font-family:"Space Grotesk",sans-serif; font-size:30px; font-weight:600; }
 .physics-brand img { width:44px; height:44px; object-fit:contain; }
@@ -369,12 +370,18 @@ button.question-flagged:not(.question-active) { background:color-mix(in oklab,va
 .physics-wave path { stroke-dasharray:220; animation:wave-trace 9s linear infinite; }
 @keyframes wave-trace { to { stroke-dashoffset:-440; } }
 .physics-exams { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
-.physics-exam { display:flex; flex-direction:column; align-items:flex-start; background:var(--surface-container); border:1px solid var(--border); border-radius:8px; padding:28px; transition:border-color .2s; }
-.physics-exam:hover { border-color:var(--primary); }
-.physics-exam-art { width:96px; height:80px; color:var(--primary); margin-bottom:22px; }
+.physics-exam { display:flex; flex-direction:column; align-items:flex-start; background:color-mix(in oklab,var(--surface-container) 94%,transparent); border:1px solid var(--border); border-radius:8px; padding:28px; transition:border-color .25s,transform .25s; animation:exam-enter .7s both; }
+.physics-exam:nth-child(2) { animation-delay:.08s; } .physics-exam:nth-child(3) { animation-delay:.16s; } .physics-exam:nth-child(4) { animation-delay:.24s; }
+@keyframes exam-enter { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+.physics-exam:hover { border-color:var(--primary); transform:translateY(-4px); }
+.physics-exam-art { width:150px; height:110px; color:var(--primary); margin-bottom:18px; }
+.physics-exam:nth-child(even) .physics-exam-art { color:var(--secondary); }
+.diagram-signal { fill:var(--primary); stroke:none; }
 .physics-exam-art svg { width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:1.6; }
 .physics-diagram { transform-origin:60px 50px; animation:formula-float 8s ease-in-out infinite alternate; }
-.physics-diagram.diagram-2 { animation:orbital-spin 35s linear infinite; }
+.physics-diagram.diagram-2 { animation:orbital-spin 14s linear infinite; }
+.physics-brand img { animation:logo-energy 5s ease-in-out infinite; }
+@keyframes logo-energy { 50% { transform:rotate(15deg) scale(1.08); } }
 .physics-exam h2 { font-size:19px; font-weight:500; line-height:1.8; flex:1; margin-bottom:28px; max-width:100%; }
 .physics-start { min-height:44px; gap:20px; }
 .physics-footer { width:min(1080px,100%); margin:auto; padding:24px; border-top:1px solid var(--border); display:flex; justify-content:center; color:var(--muted-foreground); }
