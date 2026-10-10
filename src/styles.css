@@ -351,5 +351,9 @@ button.question-flagged:not(.question-active) { background:color-mix(in oklab,va
   .academy-page .flex { min-width:0; }
   .academy-page [class*="col-span-"] { min-width:0; }
   .academy-page .w-64 { max-width:100%; }
+  .academy-page main, .academy-page main > .w-full { width:100%; min-width:0; }
+  .academy-page main > .w-full > div { min-width:0; max-width:100%; }
+  .academy-page .overflow-x-auto { width:100%; min-width:0; max-width:100%; }
+  .academy-page aside nav a { font-size:12px; line-height:20px; }
 }
 @media print { header, aside, footer, button, .academy-notice { display:none !important; } .academy-page > .pr-72 { padding-right:0; } }
