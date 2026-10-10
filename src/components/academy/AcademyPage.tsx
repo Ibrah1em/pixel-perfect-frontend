@@ -48,28 +48,29 @@ export function AcademyPage({ page, questionBank = false }: { page: Page; questi
       if (!(node instanceof Element)) return;
       if (node.name === 'button') {
         const props = attributesToProps(node.attribs);
-        return <Button {...props} variant="reference" size={undefined} className={node.attribs.class} type={(node.attribs.type as 'submit' | 'button') || 'button'}>{domToReact(node.children as DOMNode[],options)}</Button>;
+        return <Button {...props} variant="reference" size={undefined} className={node.attribs['class']} type={(node.attribs['type'] as 'submit' | 'button') || 'button'}>{domToReact(node.children as DOMNode[],options)}</Button>;
       }
       if (node.name === 'a') {
         const text = node.children.map(n => 'data' in n ? n.data : n instanceof Element ? n.children.map(c => 'data' in c ? c.data : '').join('') : '').join('').trim();
         const entry = Object.entries(destinations).find(([label]) => text.includes(label));
-        if (entry) return <Link to={entry[1]} className={node.attribs.class}>{domToReact(node.children as DOMNode[],options)}</Link>;
-        return <Button variant="reference" className={node.attribs.class} onClick={() => notify('الثوابت: c = 3×10⁸ m/s • h = 6.626×10⁻³⁴ J·s • g = 9.8 m/s²')}>{domToReact(node.children as DOMNode[],options)}</Button>;
+        if (entry) return <Link to={entry[1]} className={node.attribs['class']}>{domToReact(node.children as DOMNode[],options)}</Link>;
+        return <Button variant="reference" className={node.attribs['class']} onClick={() => notify('الثوابت: c = 3×10⁸ m/s • h = 6.626×10⁻³⁴ J·s • g = 9.8 m/s²')}>{domToReact(node.children as DOMNode[],options)}</Button>;
       }
       if (node.name === 'input') {
         const props = attributesToProps(node.attribs);
         const { value, checked, ...rest } = props;
-        return <input {...rest} defaultValue={value} defaultChecked={Boolean(checked)} onChange={node.attribs.name === 'physics-answer' ? e => setAnswers(a => ({...a,[question]:e.target.value})) : undefined} />;
+        return <input {...rest} defaultValue={typeof value === 'string' ? value : undefined} defaultChecked={Boolean(checked)} onChange={node.attribs['name'] === 'physics-answer' ? e => setAnswers(a => ({...a,[question]:e.target.value})) : undefined} />;
       }
       if (node.name === 'select') {
         const props = attributesToProps(node.attribs);
         return <select {...props} defaultValue="" onChange={e => { if(page === 'teacher') filterStudents(undefined,e.target.value); }}>{domToReact(node.children as DOMNode[],options)}</select>;
       }
       if (node.name === 'option') {
-        const props = attributesToProps(node.attribs); delete props.selected;
+        const props = attributesToProps(node.attribs); delete props['selected'];
         return <option {...props}>{domToReact(node.children as DOMNode[],options)}</option>;
       }
       if (node.name === 'form') return <form {...attributesToProps(node.attribs)} onSubmit={submit}>{domToReact(node.children as DOMNode[],options)}</form>;
+      return undefined;
     }};
     return parse(pages[page],options);
   }, [page, question]);
@@ -129,7 +130,7 @@ export function AcademyPage({ page, questionBank = false }: { page: Page; questi
       if(text.includes('الإبلاغ')) { notify('تم تسجيل ملاحظتك في هذه الجلسة التجريبية'); return; }
     }
     if(page==='result' && text.includes('الأسئلة الخاطئة')) {
-      const active=button.dataset.filtered!=='yes'; button.dataset.filtered=active?'yes':'no';
+      const active=button.dataset['filtered']!=='yes'; button.dataset['filtered']=active?'yes':'no';
       root.current?.querySelectorAll<HTMLTableRowElement>('tbody tr').forEach(tr=>tr.hidden=active && !tr.textContent?.includes('خاطئة'));
       return;
     }
