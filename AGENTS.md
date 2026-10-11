@@ -11,8 +11,11 @@
 
 - Keep uploaded reference page markup in browser-safe source modules and render through a shared React adapter, so layout fidelity and interactions stay consistent across pages.
 - Use the root route for the minimal exams screen; keep exam and results routes for the existing exam flow, and redirect the legacy exams URL to root.
-- Teacher markup must be loaded only inside a session-gated server function, never statically imported by client code, so locked visitors cannot retrieve it.
+- Teacher routes check the encrypted teacher session in a server function; legacy uploaded teacher markup stays out of client imports, and privileged exam actions independently verify that session.
 - Verify shared teacher credentials using server-only secrets and timing-safe comparisons; use encrypted HttpOnly sessions for access, not browser storage.
 - Shared teacher session cookies use Secure, SameSite=None, and Partitioned to survive the cross-site embedded preview without trusting proxy URL schemes.
 - Keep ambient physics animation in a dedicated canvas with bounded pixel ratio/frame rate and visibility/reduced-motion handling to avoid React animation re-renders.
-- Keep exam/report interactions demonstrative until persistence is explicitly requested; the teacher gate is real server-side protection.
+- Published teacher exams persist through one transactional SQL RPC, with publicly readable questions and service-only answer keys; legacy exam/report pages remain demonstrative to preserve the original flow.
+- Use shared Zod schemas on the client and server for exam authoring, and generated clients for database access, so invalid or unauthorized publishing cannot bypass the editor.
+- Optimize question images to bounded WebP files before session-gated Storage uploads; private image URLs are signed only for publicly readable published questions because workspace policy forbids public buckets.
+- Keep the native teacher editor and published student exam separate from the legacy markup adapter so structured state does not depend on DOM/text matching.
