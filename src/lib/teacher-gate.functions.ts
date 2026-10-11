@@ -3,13 +3,9 @@ import { useSession, setResponseHeader } from '@tanstack/react-start/server';
 import { redirect } from '@tanstack/react-router';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
+import { sessionConfig, requireTeacher } from './teacher-session.server';
 
 export const teacherCredentials = z.object({ username: z.string().min(1).max(100), password: z.string().min(1).max(256) });
-function sessionConfig() {
-  const password = process.env['SESSION_SECRET'];
-  if (!password) throw new Error('Teacher access is unavailable');
-  return { password, name: 'physics-teacher', maxAge: 60 * 60 * 4, cookie: { httpOnly: true, secure: true, sameSite: 'none' as const, partitioned: true, path: '/' } };
-}
 function matches(input: string, expected: string) {
   return timingSafeEqual(createHash('sha256').update(input).digest(), createHash('sha256').update(expected).digest());
 }
@@ -26,11 +22,8 @@ export const unlockTeacher = createServerFn({ method: 'POST' }).inputValidator((
   return { ok: true };
 });
 export const getTeacherPage = createServerFn({ method: 'GET' }).handler(async () => {
-  setResponseHeader('Cache-Control', 'no-store');
-  const session = await useSession<{ unlocked?: boolean }>(sessionConfig());
-  if (!session.data.unlocked) throw redirect({ to: '/' });
-  const { default: markup } = await import('@/components/academy/page-2');
-  return markup.replaceAll('أكاديمية الفيزياء', 'physics');
+  await requireTeacher();
+  return { allowed: true };
 });
 export const lockTeacher = createServerFn({ method: 'POST' }).handler(async () => {
   const session = await useSession(sessionConfig());
