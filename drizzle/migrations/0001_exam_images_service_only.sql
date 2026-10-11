@@ -1,0 +1,1 @@
+CREATE POLICY "Teacher server manages exam images" ON storage.objects FOR ALL TO service_role USING (bucket_id = 'exam-images') WITH CHECK (bucket_id = 'exam-images');
