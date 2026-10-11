@@ -29,7 +29,9 @@ export const publishExam = createServerFn({ method: 'POST' }).inputValidator((in
   if (existing) return { id: existing.id };
   const paths = data.questions.flatMap(q => q.imagePath ? [q.imagePath] : []);
   for (const path of paths) {
-    const { data: files, error } = await supabaseAdmin.storage.from('exam-images').list(data.id, { search: path.split('/')[1], limit: 100 });
+    const filename = path.split('/')[1];
+    if (!filename) throw new Error('صورة غير صالحة');
+    const { data: files, error } = await supabaseAdmin.storage.from('exam-images').list(data.id, { search: filename, limit: 100 });
     if (error || !files?.some(file => `${data.id}/${file.name}` === path)) throw new Error('أعد رفع صورة السؤال');
   }
   const payload = { id: data.id, title: data.title, duration: data.duration, questions: data.questions.map((q, position) => ({ ...q, id: crypto.randomUUID(), position })) };
@@ -69,7 +71,7 @@ export const getPublishedExam = createServerFn({ method: 'GET' }).inputValidator
       const { data: signed, error: signError } = await supabaseAdmin.storage.from('exam-images').createSignedUrl(q.image_path, 60 * 60 * 6);
       if (signError) throw new Error('تعذر تحميل صورة السؤال');
       if (signed) {
-        const browserUrl = import.meta.env.VITE_SUPABASE_URL;
+        const browserUrl = import.meta.env['VITE_SUPABASE_URL'];
         imageUrl = browserUrl ? `${browserUrl.replace(/\/$/, '')}${new URL(signed.signedUrl).pathname}${new URL(signed.signedUrl).search}` : signed.signedUrl;
       }
     }
