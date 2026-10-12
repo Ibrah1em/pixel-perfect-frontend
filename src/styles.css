@@ -454,3 +454,19 @@ button.question-flagged:not(.question-active) { background:color-mix(in oklab,va
 .student-result h2 { font-size:24px; }.student-result p { font-size:48px; margin:28px 0; color:var(--primary); }
 @media(max-width:900px) { .teacher-sidebar { width:200px; padding:24px 16px; }.teacher-content { margin-right:200px; }.teacher-main { padding:32px 24px; }.exam-settings { grid-template-columns:1fr 1fr; }.exam-title-field { grid-column:1 / -1; } }
 @media(max-width:640px) { .teacher-sidebar { position:relative; width:100%; border-left:0; border-bottom:1px solid var(--border); padding:20px; }.teacher-sidebar nav { margin-top:20px; display:flex; flex-wrap:wrap; gap:8px; }.teacher-content { margin-right:0; }.teacher-topbar { display:none; }.teacher-main { padding:28px 18px 48px; }.teacher-create { align-items:flex-start; flex-direction:column; }.teacher-main h1 { font-size:24px; }.exam-settings { gap:16px; }.editor-question { padding:18px; }.question-heading { flex-wrap:wrap; }.question-tools { width:100%; justify-content:space-between; }.editor-form .marks-field { font-size:13px; }.editor-answer { gap:4px; padding:6px; }.editor-form .editor-answer > input { padding:10px 8px; }.editor-publish { flex-wrap:wrap; }.student-exam-heading { align-items:flex-start; }.student-exam-heading h1 { font-size:22px; }.student-question { padding:20px; } }
+
+.physics-header { display:flex; justify-content:space-between; align-items:center; }
+.student-entry { max-width:460px; margin:40px auto; display:grid; gap:20px; padding:32px; border:1px solid var(--border); border-radius:12px; background:var(--surface-container); animation:exam-enter .5s ease both; }
+.student-entry h1 { font-size:24px; font-weight:600; text-align:center; overflow-wrap:anywhere; }
+.student-entry label { display:grid; gap:8px; }
+.student-entry input { padding:12px 14px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--foreground); }
+.student-entry input:focus { outline:2px solid var(--primary); outline-offset:1px; }
+.exam-progress { margin-bottom:24px; display:grid; gap:8px; }
+.exam-progress-bar { height:6px; border-radius:99px; background:var(--surface-container-high, var(--border)); overflow:hidden; }
+.exam-progress-bar span { display:block; height:100%; background:var(--primary); transition:width .4s ease; }
+.exam-nav { display:flex; justify-content:space-between; gap:12px; margin:24px 0; }
+.question-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(44px,1fr)); gap:8px; padding:18px; border:1px solid var(--border); border-radius:8px; background:var(--surface-container); }
+.question-grid button { height:44px; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--foreground); font-family:"Space Grotesk",sans-serif; cursor:pointer; transition:border-color .2s, background .2s; }
+.question-grid button:hover { border-color:var(--primary); }
+.question-grid button.is-saved { background:color-mix(in oklab,var(--primary) 18%,transparent); border-color:color-mix(in oklab,var(--primary) 50%,transparent); }
+.question-grid button.is-current { outline:2px solid var(--primary); outline-offset:1px; }

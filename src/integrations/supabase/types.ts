@@ -99,6 +99,50 @@ export type Database = {
           },
         ]
       }
+      physics_submissions: {
+        Row: {
+          answers: Json
+          class_name: string
+          exam_id: string
+          id: string
+          score: number
+          student_name: string
+          submitted_at: string
+          timed_out: boolean
+          total: number
+        }
+        Insert: {
+          answers?: Json
+          class_name: string
+          exam_id: string
+          id?: string
+          score: number
+          student_name: string
+          submitted_at?: string
+          timed_out?: boolean
+          total: number
+        }
+        Update: {
+          answers?: Json
+          class_name?: string
+          exam_id?: string
+          id?: string
+          score?: number
+          student_name?: string
+          submitted_at?: string
+          timed_out?: boolean
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "physics_submissions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "physics_exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

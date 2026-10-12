@@ -79,13 +79,22 @@ export const getPublishedExam = createServerFn({ method: 'GET' }).inputValidator
   }));
   return { ...exam, questions };
 });
-export const gradeExam = createServerFn({ method: 'POST' }).inputValidator((input: unknown) => z.object({ id: z.string().uuid(), answers: z.record(z.string().uuid(), z.number().int().min(0).max(5)).refine(a => Object.keys(a).length <= 100) }).parse(input)).handler(async ({ data }) => {
+export const gradeExam = createServerFn({ method: 'POST' }).inputValidator((input: unknown) => z.object({ id: z.string().uuid(), studentName: z.string().trim().min(1).max(200), className: z.string().trim().min(1).max(100), timedOut: z.boolean(), answers: z.record(z.string().uuid(), z.number().int().min(0).max(5)).refine(a => Object.keys(a).length <= 100) }).parse(input)).handler(async ({ data }) => {
   const { data: questions, error } = await publicClient().from('physics_questions').select('id,marks,options').eq('exam_id', data.id);
   if (error || !questions.length) throw new Error('تعذر تسليم الامتحان');
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const { data: keys, error: keyError } = await supabaseAdmin.from('physics_answer_keys').select('question_id,correct_index').in('question_id', questions.map(q => q.id));
   if (keyError || keys.length !== questions.length) throw new Error('تعذر حساب النتيجة');
   let score = 0;
-  for (const q of questions) if (data.answers[q.id] === keys.find(k => k.question_id === q.id)?.correct_index) score += Number(q.marks);
-  return { score, total: questions.reduce((sum, q) => sum + Number(q.marks), 0) };
+  const answers: Record<string, number> = {};
+  for (const q of questions) {
+    const answer = data.answers[q.id];
+    if (answer === undefined) continue;
+    answers[q.id] = answer;
+    if (answer === keys.find(k => k.question_id === q.id)?.correct_index) score += Number(q.marks);
+  }
+  const total = questions.reduce((sum, q) => sum + Number(q.marks), 0);
+  const { error: saveError } = await supabaseAdmin.from('physics_submissions').insert({ exam_id: data.id, student_name: data.studentName, class_name: data.className, answers, score, total, timed_out: data.timedOut });
+  if (saveError) throw new Error('تعذر تسليم الامتحان');
+  return { ok: true };
 });

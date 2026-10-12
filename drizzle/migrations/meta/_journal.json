@@ -15,6 +15,13 @@
       "when": 1791709678999,
       "tag": "0001_exam_images_service_only",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791801101838,
+      "tag": "0002_physics_submissions",
+      "breakpoints": true
     }
   ]
 }
