@@ -1,44 +1,93 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
-import { Clock, LoaderCircle, Send } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock, LoaderCircle, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { examQuery } from '@/lib/exams.queries';
 import { gradeExam } from '@/lib/exams.functions';
 import { PhysicsMotion } from './PhysicsMotion';
+import { TeacherLogin } from './TeacherLogin';
+
+const pad = (n: number) => n.toString().padStart(2, '0');
 
 export function PublishedExam({ id }: { id: string }) {
   const { data: exam } = useSuspenseQuery(examQuery(id));
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [student, setStudent] = useState<{ name: string; className: string } | null>(null);
+  const [entryError, setEntryError] = useState('');
+  const [current, setCurrent] = useState(0);
+  const [saved, setSaved] = useState<Record<string, number>>({});
+  const [choice, setChoice] = useState<number | undefined>(undefined);
   const [seconds, setSeconds] = useState((exam?.duration_minutes || 60) * 60);
-  const [result, setResult] = useState<{ score: number; total: number } | null>(null);
+  const [done, setDone] = useState(false);
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
   const [pending, setPending] = useState(false);
-  const [confirm, setConfirm] = useState(false);
   const grade = useServerFn(gradeExam);
   const deadline = useRef(0);
+  const savedRef = useRef(saved);
+  savedRef.current = saved;
+  const submitting = useRef(false);
+
   useEffect(() => {
-    if (result) return;
-    if (!deadline.current) deadline.current = Date.now() + (exam?.duration_minutes || 60) * 60000;
+    if (!student || done || !exam) return;
+    deadline.current = Date.now() + exam.duration_minutes * 60000;
     const timer = setInterval(() => setSeconds(Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000))), 1000);
     return () => clearInterval(timer);
-  }, [exam?.duration_minutes, result]);
-  async function submit() {
-    if (pending || result) return;
-    setPending(true); setError('');
-    try { const value = await grade({ data: { id, answers } }); setResult(value); setConfirm(false); }
-    catch { setError('تعذر تسليم الامتحان، حاول مرة أخرى'); }
+  }, [student, done, exam]);
+
+  const question = exam?.questions[current];
+  useEffect(() => { if (question) setChoice(savedRef.current[question.id]); setWarning(''); }, [question]);
+
+  async function submit(timedOut: boolean) {
+    if (!student || submitting.current || done) return;
+    submitting.current = true; setPending(true); setError('');
+    try { await grade({ data: { id, studentName: student.name, className: student.className, timedOut, answers: savedRef.current } }); setDone(true); }
+    catch { setError('تعذر تسليم الامتحان، حاول مرة أخرى'); submitting.current = false; }
     finally { setPending(false); }
   }
-  const autoSubmitted = useRef(false);
-  useEffect(() => { if (seconds === 0 && !autoSubmitted.current) { autoSubmitted.current = true; void submit(); } }, [seconds]);
-  return <div className="physics-home"><PhysicsMotion /><header className="physics-header"><Link to="/" className="physics-brand"><img src="/__l5e/assets-v1/08c65279-5f97-436d-9530-a21669217411/image-0.png" alt="" width="44" height="44" /><span dir="ltr">physics</span></Link></header><main className="physics-main">
-    {!exam ? <><h1>الامتحان غير موجود</h1><Button asChild><Link to="/">العودة للامتحانات</Link></Button></> : result ? <section className="student-result"><h1>{exam.title}</h1><h2>نتيجة الامتحان</h2><p>{result.score} / {result.total}</p><Button asChild><Link to="/">العودة للامتحانات</Link></Button></section> : <>
-      <div className="student-exam-heading"><h1>{exam.title}</h1><div className="exam-clock flex items-center gap-2" aria-label="الوقت المتبقي"><Clock size={20} /><span dir="ltr">{Math.floor(seconds / 60).toString().padStart(2, '0')}:{(seconds % 60).toString().padStart(2, '0')}</span></div></div>
-      <div className="student-questions">{exam.questions.map((q, index) => <article className="student-question" key={q.id}><div className="flex items-center justify-between"><h2>السؤال {index + 1}</h2><span className="text-sm text-muted-foreground">{q.marks} درجة</span></div><p>{q.text}</p>{q.imageUrl && <img src={q.imageUrl} alt={`صورة السؤال ${index + 1}`} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />}
-        <div className="student-options">{q.options.map((option, optionIndex) => <label key={optionIndex}><input type="radio" name={q.id} checked={answers[q.id] === optionIndex} disabled={pending || seconds === 0} onChange={() => setAnswers(a => ({ ...a, [q.id]: optionIndex }))} /><span>{option}</span></label>)}</div></article>)}</div>
-      <div className="editor-publish"><span>{Object.keys(answers).length} / {exam.questions.length} إجابات</span><Button disabled={pending} onClick={() => setConfirm(true)}><Send size={18} />تسليم الامتحان</Button></div>
-    </>}{error && <p role="alert" className="editor-error">{error}</p>}
-  </main>{confirm && <div className="academy-dialog" role="dialog" aria-modal="true" aria-label="تسليم الامتحان"><div className="academy-dialog-box"><h2>تأكيد تسليم الامتحان</h2><div className="dialog-actions"><Button onClick={submit} disabled={pending}>{pending && <LoaderCircle size={18} className="animate-spin" />}تسليم وعرض النتيجة</Button><Button variant="secondary" disabled={pending} onClick={() => setConfirm(false)}>متابعة الامتحان</Button></div></div></div>}</div>;
+  useEffect(() => { if (student && seconds === 0 && !done) void submit(true); }, [seconds, student, done]);
+
+  function enter(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const name = String(form.get('name') || '').trim().replace(/\s+/g, ' ');
+    const className = String(form.get('className') || '').trim();
+    if (name.split(' ').length < 4) { setEntryError('اكتب الاسم رباعي'); return; }
+    if (!className) { setEntryError('اكتب اسم الفصل'); return; }
+    setEntryError(''); setStudent({ name, className });
+  }
+
+  function saveAndNext() {
+    if (!exam || !question) return;
+    const next = choice === undefined ? saved : { ...saved, [question.id]: choice };
+    if (choice !== undefined) { setSaved(next); savedRef.current = next; }
+    if (current < exam.questions.length - 1) { setCurrent(current + 1); return; }
+    const missing = exam.questions.map((q, i) => next[q.id] === undefined ? i + 1 : 0).filter(Boolean);
+    if (missing.length) { setWarning(missing.length === 1 ? `لسه في سؤال انت محلتوش: السؤال ${missing[0]}` : `لسه في أسئلة انت محلتهاش: ${missing.join('، ')}`); return; }
+    void submit(false);
+  }
+
+  const header = <header className="physics-header"><Link to="/" className="physics-brand"><img src="/__l5e/assets-v1/08c65279-5f97-436d-9530-a21669217411/image-0.png" alt="" width="44" height="44" /><span dir="ltr">physics</span></Link><TeacherLogin /></header>;
+  if (!exam) return <div className="physics-home"><PhysicsMotion />{header}<main className="physics-main"><h1>الامتحان غير موجود</h1><Button asChild><Link to="/">العودة للامتحانات</Link></Button></main></div>;
+
+  const total = exam.questions.length;
+  const answered = Object.keys(saved).length;
+  const isLast = current === total - 1;
+
+  return <div className="physics-home"><PhysicsMotion />{header}<main className="physics-main">
+    {done ? <section className="student-result"><CheckCircle2 size={56} className="mx-auto text-primary" /><h1>{exam.title}</h1><h2>تم تسليم الامتحان بنجاح</h2><Button asChild><Link to="/">العودة للامتحانات</Link></Button></section>
+    : !student ? <form className="student-entry" onSubmit={enter}><h1>{exam.title}</h1><label>الاسم الرباعي<input name="name" required maxLength={200} autoComplete="name" /></label><label>اسم الفصل<input name="className" required maxLength={100} /></label>{entryError && <p role="alert" className="editor-error">{entryError}</p>}<Button type="submit">دخول الامتحان</Button></form>
+    : question && <>
+      <div className="student-exam-heading"><h1>{exam.title}</h1><div className="exam-clock flex items-center gap-2" aria-label="الوقت المتبقي"><Clock size={20} /><span dir="ltr">{pad(Math.floor(seconds / 60))}:{pad(seconds % 60)}</span></div></div>
+      <div className="exam-progress" aria-label="التقدم"><div className="flex justify-between text-sm text-muted-foreground"><span>التقدم في الورقة</span><span>{answered} / {total}</span></div><div className="exam-progress-bar"><span style={{ width: `${(answered / total) * 100}%` }} /></div></div>
+      <article className="student-question" key={question.id}><div className="flex items-center justify-between"><h2>السؤال {current + 1} من {total}</h2><span className="text-sm text-muted-foreground">{question.marks} درجة</span></div><p>{question.text}</p>{question.imageUrl && <img src={question.imageUrl} alt={`صورة السؤال ${current + 1}`} decoding="async" />}
+        <div className="student-options">{question.options.map((option, i) => <label key={i}><input type="radio" name={question.id} checked={choice === i} disabled={pending || seconds === 0} onChange={() => setChoice(i)} /><span>{option}</span></label>)}</div>
+      </article>
+      {warning && <p role="alert" className="editor-error">{warning}</p>}
+      <div className="exam-nav"><Button variant="secondary" disabled={current === 0 || pending} onClick={() => setCurrent(current - 1)}><ChevronRight size={18} />السابق</Button><Button disabled={pending || seconds === 0} onClick={saveAndNext}>{pending ? <LoaderCircle size={18} className="animate-spin" /> : isLast ? <Send size={18} /> : null}{isLast ? 'تسليم الامتحان' : 'حفظ والانتقال للتالي'}{!isLast && <ChevronLeft size={18} />}</Button></div>
+      <nav className="question-grid" aria-label="مصفوفة الأسئلة">{exam.questions.map((q, i) => <button type="button" key={q.id} aria-label={`السؤال ${i + 1}`} aria-current={i === current} className={`${i === current ? 'is-current' : ''} ${saved[q.id] !== undefined ? 'is-saved' : ''}`} onClick={() => setCurrent(i)}>{i + 1}</button>)}</nav>
+    </>}
+    {error && <p role="alert" className="editor-error">{error}</p>}
+  </main></div>;
 }
