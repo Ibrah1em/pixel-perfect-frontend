@@ -470,3 +470,26 @@ button.question-flagged:not(.question-active) { background:color-mix(in oklab,va
 .question-grid button:hover { border-color:var(--primary); }
 .question-grid button.is-saved { background:color-mix(in oklab,var(--primary) 18%,transparent); border-color:color-mix(in oklab,var(--primary) 50%,transparent); }
 .question-grid button.is-current { outline:2px solid var(--primary); outline-offset:1px; }
+
+.teacher-grades-list { margin-top:40px; display:grid; gap:12px; }
+.teacher-grades-list h2 { font-size:18px; color:var(--muted-foreground); margin-bottom:4px; }
+.grades-exam-link, .grades-class { display:flex; align-items:center; gap:12px; padding:18px 20px; border:1px solid var(--border); border-radius:8px; background:var(--surface-container); transition:border-color .2s, transform .2s; overflow-wrap:anywhere; }
+.grades-exam-link:hover, .grades-class:hover { border-color:var(--primary); transform:translateY(-2px); }
+.grades-exam-link svg, .grades-class svg { color:var(--primary); flex:none; }
+.grades-exam-link span { color:var(--muted-foreground); }
+.grades-classes { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; }
+.grades-class { flex-direction:column; align-items:flex-start; }
+.grades-class strong { font-size:20px; }.grades-class span { color:var(--muted-foreground); font-size:14px; }
+.grades-back { padding:8px; border-radius:6px; }.grades-back:hover { background:var(--surface-container); }
+.grades-table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:8px; background:var(--surface-container); }
+.grades-table { width:100%; border-collapse:collapse; }
+.grades-table th, .grades-table td { padding:14px 18px; text-align:right; border-bottom:1px solid var(--border); }
+.grades-table th { color:var(--muted-foreground); font-weight:500; font-size:14px; }
+.grades-table tr:last-child td { border-bottom:0; }
+.grades-table a { color:var(--primary); }
+.submission-score { font-size:36px; color:var(--primary); font-family:"Space Grotesk",sans-serif; margin:8px 0 28px; text-align:right; }
+.review-option { display:flex; align-items:center; gap:12px; border:1px solid var(--border); border-radius:6px; padding:14px 16px; overflow-wrap:anywhere; }
+.review-option small { margin-inline-start:auto; color:var(--muted-foreground); }
+.review-option.is-correct { border-color:color-mix(in oklab,var(--success, oklch(0.72 0.14 155)) 70%,transparent); background:color-mix(in oklab,var(--success, oklch(0.72 0.14 155)) 12%,transparent); }
+.review-option.is-chosen-wrong { border-color:color-mix(in oklab,var(--error) 70%,transparent); background:color-mix(in oklab,var(--error) 12%,transparent); }
+.mark-right { color:var(--success, oklch(0.72 0.14 155)); }.mark-wrong { color:var(--error); }
