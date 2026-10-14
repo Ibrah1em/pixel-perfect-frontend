@@ -15,6 +15,8 @@ import { Route as ExamsRouteImport } from './routes/exams'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as TeacherRouteImport } from './routes/teacher'
 import { Route as TeacherCreateRouteImport } from './routes/teacher-create'
+import { Route as TeacherGradesExamIdRouteImport } from './routes/teacher-grades.$examId'
+import { Route as TeacherSubmissionIdRouteImport } from './routes/teacher-submission.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +48,16 @@ const TeacherCreateRoute = TeacherCreateRouteImport.update({
   path: '/teacher-create',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeacherGradesExamIdRoute = TeacherGradesExamIdRouteImport.update({
+  id: '/teacher-grades/$examId',
+  path: '/teacher-grades/$examId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherSubmissionIdRoute = TeacherSubmissionIdRouteImport.update({
+  id: '/teacher-submission/$id',
+  path: '/teacher-submission/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +66,8 @@ export interface FileRoutesByFullPath {
   '/results': typeof ResultsRoute
   '/teacher': typeof TeacherRoute
   '/teacher-create': typeof TeacherCreateRoute
+  '/teacher-grades/$examId': typeof TeacherGradesExamIdRoute
+  '/teacher-submission/$id': typeof TeacherSubmissionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +76,8 @@ export interface FileRoutesByTo {
   '/results': typeof ResultsRoute
   '/teacher': typeof TeacherRoute
   '/teacher-create': typeof TeacherCreateRoute
+  '/teacher-grades/$examId': typeof TeacherGradesExamIdRoute
+  '/teacher-submission/$id': typeof TeacherSubmissionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,13 +87,30 @@ export interface FileRoutesById {
   '/results': typeof ResultsRoute
   '/teacher': typeof TeacherRoute
   '/teacher-create': typeof TeacherCreateRoute
+  '/teacher-grades/$examId': typeof TeacherGradesExamIdRoute
+  '/teacher-submission/$id': typeof TeacherSubmissionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/exam' | '/exams' | '/results' | '/teacher' | '/teacher-create'
+    | '/'
+    | '/exam'
+    | '/exams'
+    | '/results'
+    | '/teacher'
+    | '/teacher-create'
+    | '/teacher-grades/$examId'
+    | '/teacher-submission/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/exam' | '/exams' | '/results' | '/teacher' | '/teacher-create'
+  to:
+    | '/'
+    | '/exam'
+    | '/exams'
+    | '/results'
+    | '/teacher'
+    | '/teacher-create'
+    | '/teacher-grades/$examId'
+    | '/teacher-submission/$id'
   id:
     | '__root__'
     | '/'
@@ -86,6 +119,8 @@ export interface FileRouteTypes {
     | '/results'
     | '/teacher'
     | '/teacher-create'
+    | '/teacher-grades/$examId'
+    | '/teacher-submission/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -95,6 +130,8 @@ export interface RootRouteChildren {
   ResultsRoute: typeof ResultsRoute
   TeacherRoute: typeof TeacherRoute
   TeacherCreateRoute: typeof TeacherCreateRoute
+  TeacherGradesExamIdRoute: typeof TeacherGradesExamIdRoute
+  TeacherSubmissionIdRoute: typeof TeacherSubmissionIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -141,6 +178,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teacher-grades/$examId': {
+      id: '/teacher-grades/$examId'
+      path: '/teacher-grades/$examId'
+      fullPath: '/teacher-grades/$examId'
+      preLoaderRoute: typeof TeacherGradesExamIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher-submission/$id': {
+      id: '/teacher-submission/$id'
+      path: '/teacher-submission/$id'
+      fullPath: '/teacher-submission/$id'
+      preLoaderRoute: typeof TeacherSubmissionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -151,6 +202,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResultsRoute: ResultsRoute,
   TeacherRoute: TeacherRoute,
   TeacherCreateRoute: TeacherCreateRoute,
+  TeacherGradesExamIdRoute: TeacherGradesExamIdRoute,
+  TeacherSubmissionIdRoute: TeacherSubmissionIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

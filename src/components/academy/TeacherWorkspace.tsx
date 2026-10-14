@@ -1,24 +1,36 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
-import { useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Check, Home, ImagePlus, LoaderCircle, Plus, Trash2, Upload, X } from 'lucide-react';
+import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { examsQuery } from '@/lib/exams.queries';
+import { ArrowRight, BarChart3, Check, Home, ImagePlus, LoaderCircle, Plus, Trash2, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PhysicsMotion } from './PhysicsMotion';
 import { examSchema, type QuestionDraft } from '@/lib/exam-schemas';
 import { publishExam, uploadQuestionImage } from '@/lib/exams.functions';
 import { optimizeQuestionImage } from '@/lib/optimize-image';
 
-export function TeacherWorkspace({ editor = false }: { editor?: boolean }) {
+export function TeacherShell({ children }: { children: ReactNode }) {
   return <div className="physics-home teacher-workspace"><PhysicsMotion />
     <aside className="teacher-sidebar">
       <Link to="/teacher" className="physics-brand"><img src="/__l5e/assets-v1/08c65279-5f97-436d-9530-a21669217411/image-0.png" alt="" width="44" height="44" /><span dir="ltr">physics</span></Link>
       <nav aria-label="صفحات المعلم"><Button type="button" variant="ghost" asChild><Link to="/"><Home size={18} />الصفحة الرئيسية</Link></Button><Button type="button" variant="ghost" asChild><Link to="/teacher"><span className="teacher-nav-dot" />لوحة المعلم</Link></Button></nav>
     </aside>
-    <div className="teacher-content"><header className="teacher-topbar"><span>لوحة المعلم</span></header>
-      {editor ? <ExamEditor /> : <main className="teacher-main"><div className="teacher-create"><h1>إنشاء اختبار</h1><Button asChild><Link to="/teacher-create"><Plus size={18} />إنشاء اختبار</Link></Button></div></main>}
-    </div>
+    <div className="teacher-content"><header className="teacher-topbar"><span>لوحة المعلم</span></header><main className="teacher-main">{children}</main></div>
   </div>;
+}
+
+export function TeacherWorkspace({ editor = false }: { editor?: boolean }) {
+  if (editor) return <TeacherShell><ExamEditor /></TeacherShell>;
+  return <TeacherShell><TeacherHome /></TeacherShell>;
+}
+
+function TeacherHome() {
+  const { data: exams } = useSuspenseQuery(examsQuery());
+  return <>
+    <div className="teacher-create"><h1>إنشاء اختبار</h1><Button asChild><Link to="/teacher-create"><Plus size={18} />إنشاء اختبار</Link></Button></div>
+    {exams.length > 0 && <section className="teacher-grades-list"><h2>درجات الامتحانات</h2>{exams.map(e => <Link key={e.id} to="/teacher-grades/$examId" params={{ examId: e.id }} className="grades-exam-link"><BarChart3 size={20} /><span>درجات الامتحان</span><strong>{e.title}</strong></Link>)}</section>}
+  </>;
 }
 
 type EditorQuestion = QuestionDraft & { localId: string; preview: string | null };
@@ -65,7 +77,7 @@ function ExamEditor() {
     catch { setError('تعذر رفع الامتحان، بياناتك ما زالت موجودة، حاول مرة أخرى'); }
     finally { setPending(false); }
   }
-  return <main className="teacher-main exam-editor"><div className="editor-heading"><h1>إنشاء الامتحان</h1><Button type="button" variant="ghost" size="icon" title="العودة للوحة المعلم" aria-label="العودة للوحة المعلم" asChild><Link to="/teacher"><ArrowRight size={20} /></Link></Button></div>
+  return <div className="exam-editor"><div className="editor-heading"><h1>إنشاء الامتحان</h1><Button type="button" variant="ghost" size="icon" title="العودة للوحة المعلم" aria-label="العودة للوحة المعلم" asChild><Link to="/teacher"><ArrowRight size={20} /></Link></Button></div>
     <form onSubmit={submit} className="editor-form"><fieldset disabled={pending}>
       <section className="exam-settings"><label className="exam-title-field">عنوان الامتحان<input value={title} onChange={e => setTitle(e.target.value)} maxLength={200} required placeholder="عنوان الامتحان" /></label><label>المدة (دقيقة)<input type="number" min={1} max={300} required value={duration} onChange={e => setDuration(Number(e.target.value))} /></label><label>عدد الأسئلة<input type="number" min={1} max={100} required value={count} onChange={e => setCount(Number(e.target.value))} /></label></section>
       <div className="editor-question-list">{questions.map((q, index) => <article className="editor-question" key={q.localId}>
@@ -84,5 +96,5 @@ function ExamEditor() {
       <div className="editor-publish"><span>{questions.length} / {count} أسئلة · {questions.reduce((sum, q) => sum + (q.marks || 0), 0)} درجة</span><Button type="submit" disabled={pending || uploading.length > 0 || !examId}>{pending ? <LoaderCircle size={18} className="animate-spin" /> : <Upload size={18} />}{pending ? 'جارٍ رفع الامتحان' : 'رفع الامتحان'}</Button></div>
       {error && <p role="alert" className="editor-error">{error}</p>}
     </fieldset></form>
-  </main>;
+  </div>;
 }
