@@ -13,7 +13,8 @@ export function TeacherLogin() {
   const navigate = useNavigate();
   const lock = useServerFn(lockTeacher);
   // Leaving to the public page always ends the teacher session, so every visit needs the password again.
-  useEffect(() => { lock().catch(() => {}); }, [lock]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { lock().catch(() => {}); }, []);
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close(); }, [open]);
   async function submit(event: FormEvent<HTMLFormElement>) {
