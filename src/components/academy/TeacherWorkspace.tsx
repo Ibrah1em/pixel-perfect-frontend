@@ -7,7 +7,7 @@ import { ArrowRight, BarChart3, Check, Home, ImagePlus, LoaderCircle, Plus, Tras
 import { Button } from '@/components/ui/button';
 import { PhysicsMotion } from './PhysicsMotion';
 import { examSchema, type QuestionDraft } from '@/lib/exam-schemas';
-import { publishExam, uploadQuestionImage } from '@/lib/exams.functions';
+import { publishExam, uploadQuestionImage, deleteExam } from '@/lib/exams.functions';
 import { optimizeQuestionImage } from '@/lib/optimize-image';
 
 export function TeacherShell({ children }: { children: ReactNode }) {
@@ -27,9 +27,19 @@ export function TeacherWorkspace({ editor = false }: { editor?: boolean }) {
 
 function TeacherHome() {
   const { data: exams } = useSuspenseQuery(examsQuery());
+  const remove = useServerFn(deleteExam);
+  const queryClient = useQueryClient();
+  const [deleting, setDeleting] = useState('');
+  async function onDelete(id: string, title: string) {
+    if (deleting || !window.confirm(`حذف امتحان "${title}" نهائياً مع كل درجاته؟`)) return;
+    setDeleting(id);
+    try { await remove({ data: { id } }); await queryClient.invalidateQueries({ queryKey: ['published-exams'] }); }
+    catch { window.alert('تعذر حذف الامتحان، حاول مرة أخرى'); }
+    finally { setDeleting(''); }
+  }
   return <>
     <div className="teacher-create"><h1>إنشاء اختبار</h1><Button asChild><Link to="/teacher-create"><Plus size={18} />إنشاء اختبار</Link></Button></div>
-    {exams.length > 0 && <section className="teacher-grades-list"><h2>درجات الامتحانات</h2>{exams.map(e => <Link key={e.id} to="/teacher-grades/$examId" params={{ examId: e.id }} className="grades-exam-link"><BarChart3 size={20} /><span>درجات الامتحان</span><strong>{e.title}</strong></Link>)}</section>}
+    {exams.length > 0 && <section className="teacher-grades-list"><h2>درجات الامتحانات</h2>{exams.map(e => <div key={e.id} className="grades-exam-row"><Link to="/teacher-grades/$examId" params={{ examId: e.id }} className="grades-exam-link"><BarChart3 size={20} /><span>درجات الامتحان</span><strong>{e.title}</strong></Link><Button type="button" variant="ghost" size="icon" title="حذف الامتحان" aria-label={`حذف امتحان ${e.title}`} disabled={deleting === e.id} onClick={() => onDelete(e.id, e.title)}>{deleting === e.id ? <LoaderCircle size={18} className="animate-spin" /> : <Trash2 size={18} />}</Button></div>)}</section>}
   </>;
 }
 

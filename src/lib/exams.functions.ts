@@ -98,3 +98,12 @@ export const gradeExam = createServerFn({ method: 'POST' }).inputValidator((inpu
   if (saveError) throw new Error('تعذر تسليم الامتحان');
   return { ok: true };
 });
+export const deleteExam = createServerFn({ method: 'POST' }).inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input)).handler(async ({ data }) => {
+  await requireTeacher();
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+  const { data: files } = await supabaseAdmin.storage.from('exam-images').list(data.id, { limit: 1000 });
+  if (files?.length) await supabaseAdmin.storage.from('exam-images').remove(files.map(f => `${data.id}/${f.name}`));
+  const { error } = await supabaseAdmin.from('physics_exams').delete().eq('id', data.id);
+  if (error) throw new Error('تعذر حذف الامتحان');
+  return { ok: true };
+});

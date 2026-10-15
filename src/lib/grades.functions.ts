@@ -12,7 +12,7 @@ export const getExamGrades = createServerFn({ method: 'GET' }).inputValidator((i
   const { data: exam, error } = await supabaseAdmin.from('physics_exams').select('id,title').eq('id', data.examId).maybeSingle();
   if (error) throw new Error('تعذر تحميل الدرجات');
   if (!exam) return null;
-  const { data: rows, error: rowsError } = await supabaseAdmin.from('physics_submissions').select('id,student_name,class_name,score,total,timed_out,submitted_at').eq('exam_id', exam.id).order('student_name');
+  const { data: rows, error: rowsError } = await supabaseAdmin.from('physics_submissions').select('id,student_name,class_name,score,total,timed_out,submitted_at').eq('exam_id', exam.id).order('score', { ascending: false }).order('student_name');
   if (rowsError) throw new Error('تعذر تحميل الدرجات');
   const classes = new Map<string, { key: string; name: string; students: { id: string; name: string; score: number; total: number; timedOut: boolean; submittedAt: string }[] }>();
   for (const r of rows) {
@@ -20,6 +20,7 @@ export const getExamGrades = createServerFn({ method: 'GET' }).inputValidator((i
     if (!classes.has(key)) classes.set(key, { key, name: r.class_name.trim(), students: [] });
     classes.get(key)!.students.push({ id: r.id, name: r.student_name, score: Number(r.score), total: Number(r.total), timedOut: r.timed_out, submittedAt: r.submitted_at });
   }
+  for (const c of classes.values()) c.students.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'ar'));
   return { exam, classes: [...classes.values()].sort((a, b) => a.name.localeCompare(b.name, 'ar', { numeric: true })) };
 });
 

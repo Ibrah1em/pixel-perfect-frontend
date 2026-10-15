@@ -493,3 +493,15 @@ button.question-flagged:not(.question-active) { background:color-mix(in oklab,va
 .review-option.is-correct { border-color:color-mix(in oklab,var(--success, oklch(0.72 0.14 155)) 70%,transparent); background:color-mix(in oklab,var(--success, oklch(0.72 0.14 155)) 12%,transparent); }
 .review-option.is-chosen-wrong { border-color:color-mix(in oklab,var(--error) 70%,transparent); background:color-mix(in oklab,var(--error) 12%,transparent); }
 .mark-right { color:var(--success, oklch(0.72 0.14 155)); }.mark-wrong { color:var(--error); }
+
+/* Delete control beside each exam + smoother, livelier surfaces */
+.grades-exam-row { display:flex; align-items:center; gap:8px; }
+.grades-exam-row .grades-exam-link { flex:1; }
+.grades-exam-row > button:hover { color:var(--destructive); }
+.physics-exam { transition:border-color .3s, transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s; }
+.physics-exam:hover { box-shadow:0 18px 40px -22px color-mix(in oklab,var(--primary) 55%,transparent); border-color:color-mix(in oklab,var(--primary) 45%,var(--border)); }
+.student-question { animation:exam-enter .45s cubic-bezier(.2,.8,.2,1) both; box-shadow:0 12px 32px -26px color-mix(in oklab,var(--primary) 60%,transparent); }
+.student-options label, .student-options button { transition:background-color .2s, border-color .2s, transform .2s; }
+.student-options label:hover, .student-options button:hover { transform:translateX(-3px); }
+html { scroll-behavior:smooth; }
+@media (prefers-reduced-motion: reduce) { .student-question, .physics-exam { animation:none; transition:none; } html { scroll-behavior:auto; } }
