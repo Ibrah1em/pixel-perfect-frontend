@@ -505,3 +505,17 @@ button.question-flagged:not(.question-active) { background:color-mix(in oklab,va
 .student-options label:hover, .student-options button:hover { transform:translateX(-3px); }
 html { scroll-behavior:smooth; }
 @media (prefers-reduced-motion: reduce) { .student-question, .physics-exam { animation:none; transition:none; } html { scroll-behavior:auto; } }
+
+/* Off-screen printable grades report, captured into the PDF (always light for paper) */
+.grades-pdf-btn { margin-bottom:24px; }
+.grades-report { position:fixed; top:0; left:-10000px; width:760px; background:#fff; color:#111; font-family:'Noto Sans Arabic','Noto Sans',sans-serif; }
+.grades-report-head { padding:24px 20px 12px; border-bottom:3px solid #2f6fb0; }
+.grades-report-head h1 { font-size:24px; font-weight:700; margin:0 0 6px; }
+.grades-report-head p { color:#555; font-size:14px; margin:0; }
+.grades-report-class { padding:18px 20px; }
+.grades-report-class h2 { font-size:18px; font-weight:700; margin:0 0 10px; color:#1f4f80; }
+.grades-report-class h2 span { font-size:13px; color:#666; font-weight:400; }
+.grades-report table { width:100%; border-collapse:collapse; font-size:14px; }
+.grades-report th { background:#e8f0f9; color:#1f4f80; text-align:right; padding:8px 10px; border:1px solid #c9d8ea; }
+.grades-report td { padding:8px 10px; border:1px solid #dde3ea; }
+.grades-report tbody tr:nth-child(even) td { background:#f6f8fb; }
