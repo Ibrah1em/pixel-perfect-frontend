@@ -28,9 +28,9 @@ function Grades() {
   const group = selected ? data.classes.find(c => c.key === selected) : undefined;
   const pdfClasses = group ? [group] : data.classes;
   async function savePdf() {
-    if (!report.current || busy) return;
+    if (!report.current || busy || !data) return;
     setBusy(true);
-    try { await downloadGradesPdf(report.current, `درجات ${data!.exam.title}${group ? ` - ${group.name}` : ''}.pdf`.replace(/[\\/:*?"<>|]/g, '-')); }
+    try { await downloadGradesPdf(report.current, `درجات ${data.exam.title}${group ? ` - ${group.name}` : ''}.pdf`.replace(/[\\/:*?"<>|]/g, '-')); }
     catch { window.alert('تعذر تجهيز ملف PDF، حاول مرة أخرى'); }
     finally { setBusy(false); }
   }
