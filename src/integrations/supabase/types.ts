@@ -42,6 +42,7 @@ export type Database = {
           created_at: string
           duration_minutes: number
           id: string
+          is_closed: boolean
           question_count: number
           title: string
         }
@@ -49,6 +50,7 @@ export type Database = {
           created_at?: string
           duration_minutes: number
           id: string
+          is_closed?: boolean
           question_count: number
           title: string
         }
@@ -56,6 +58,7 @@ export type Database = {
           created_at?: string
           duration_minutes?: number
           id?: string
+          is_closed?: boolean
           question_count?: number
           title?: string
         }
