@@ -21,7 +21,7 @@ export function TeacherLogin() {
     event.preventDefault();
     if (pending) return;
     const form = new FormData(event.currentTarget);
-    const parsed = teacherCredentials.safeParse({ username: form.get('username'), password: form.get('password') });
+    const parsed = teacherCredentials.safeParse({ username: String(form.get('username') ?? '').trim(), password: String(form.get('password') ?? '').trim() });
     if (!parsed.success) { setError('أدخل الاسم وكلمة المرور'); return; }
     setPending(true); setError('');
     try {
