@@ -20,3 +20,4 @@
 - Optimize question images to bounded WebP files before session-gated Storage uploads; private image URLs are signed only for publicly readable published questions because workspace policy forbids public buckets.
 - Keep the native teacher editor and published student exam separate from the legacy markup adapter so structured state does not depend on DOM/text matching.
 - Student exams shuffle question and option order client-side per attempt but submit the teacher's original option index, so grading and teacher review stay order-independent.
+- Grades PDFs paginate whole table rows with repeated report/class headings and start each class on its own page, preserving Arabic shaping and avoiding clipped rows.
