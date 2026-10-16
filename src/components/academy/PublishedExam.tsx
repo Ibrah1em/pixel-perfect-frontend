@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
-import { CheckCircle2, ChevronLeft, ChevronRight, Clock, LoaderCircle, Send } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock, LoaderCircle, LockKeyhole, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { examQuery } from '@/lib/exams.queries';
-import { gradeExam } from '@/lib/exams.functions';
+import { gradeExam, checkExamAdmission } from '@/lib/exams.functions';
 import { PhysicsMotion } from './PhysicsMotion';
 import { TeacherLogin } from './TeacherLogin';
 
@@ -16,6 +16,9 @@ export function PublishedExam({ id }: { id: string }) {
   const { data: exam } = useSuspenseQuery(examQuery(id));
   const [student, setStudent] = useState<{ name: string; className: string } | null>(null);
   const [entryError, setEntryError] = useState('');
+  const [closed, setClosed] = useState(false);
+  const [entering, setEntering] = useState(false);
+  const admission = useServerFn(checkExamAdmission);
   const [current, setCurrent] = useState(0);
   const [saved, setSaved] = useState<Record<string, number>>({});
   const [choice, setChoice] = useState<number | undefined>(undefined);
@@ -51,14 +54,21 @@ export function PublishedExam({ id }: { id: string }) {
   }
   useEffect(() => { if (student && seconds === 0 && !done) void submit(true); }, [seconds, student, done]);
 
-  function enter(event: FormEvent<HTMLFormElement>) {
+  async function enter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (entering) return;
     const form = new FormData(event.currentTarget);
     const name = String(form.get('name') || '').trim().replace(/\s+/g, ' ');
     const className = String(form.get('className') || '').trim();
     if (name.split(' ').length < 4) { setEntryError('اكتب الاسم رباعي'); return; }
     if (!className) { setEntryError('اكتب اسم الفصل'); return; }
-    setEntryError(''); setStudent({ name, className });
+    setEntryError(''); setEntering(true);
+    try {
+      const result = await admission({ data: { id } });
+      if (result.closed) { setClosed(true); return; }
+      setStudent({ name, className });
+    } catch { setEntryError('تعذر دخول الامتحان، حاول مرة أخرى'); }
+    finally { setEntering(false); }
   }
 
   function saveAndNext() {
@@ -73,6 +83,7 @@ export function PublishedExam({ id }: { id: string }) {
 
   const header = <header className="physics-header"><Link to="/" className="physics-brand"><img src="/__l5e/assets-v1/08c65279-5f97-436d-9530-a21669217411/image-0.png" alt="" width="44" height="44" /><span dir="ltr">physics</span></Link><TeacherLogin /></header>;
   if (!exam) return <div className="physics-home"><PhysicsMotion />{header}<main className="physics-main"><h1>الامتحان غير موجود</h1><Button asChild><Link to="/">العودة للامتحانات</Link></Button></main></div>;
+  if (!student && (exam.is_closed || closed)) return <div className="physics-home"><PhysicsMotion />{header}<main className="physics-main"><section className="student-result"><LockKeyhole size={48} className="mx-auto text-primary" /><h1>{exam.title}</h1><h2>الامتحان مقفول حاليًا</h2><Button asChild><Link to="/">العودة للامتحانات</Link></Button></section></main></div>;
 
   const total = order.length || exam.questions.length;
   const answered = Object.keys(saved).length;
@@ -80,7 +91,7 @@ export function PublishedExam({ id }: { id: string }) {
 
   return <div className="physics-home"><PhysicsMotion />{header}<main className="physics-main">
     {done ? <section className="student-result"><CheckCircle2 size={56} className="mx-auto text-primary" /><h1>{exam.title}</h1><h2>تم تسليم الامتحان بنجاح</h2><Button asChild><Link to="/">العودة للامتحانات</Link></Button></section>
-    : !student ? <form className="student-entry" onSubmit={enter}><h1>{exam.title}</h1><label>الاسم الرباعي<input name="name" required maxLength={200} autoComplete="name" /></label><label>اسم الفصل<input name="className" required maxLength={100} /></label>{entryError && <p role="alert" className="editor-error">{entryError}</p>}<Button type="submit">دخول الامتحان</Button></form>
+    : !student ? <form className="student-entry" onSubmit={enter}><h1>{exam.title}</h1><label>الاسم الرباعي<input name="name" required maxLength={200} autoComplete="name" /></label><label>اسم الفصل<input name="className" required maxLength={100} /></label>{entryError && <p role="alert" className="editor-error">{entryError}</p>}<Button type="submit" disabled={entering}>{entering && <LoaderCircle size={18} className="animate-spin" />}دخول الامتحان</Button></form>
     : question && <>
       <div className="student-exam-heading"><h1>{exam.title}</h1><div className="exam-clock flex items-center gap-2" aria-label="الوقت المتبقي"><Clock size={20} /><span dir="ltr">{pad(Math.floor(seconds / 60))}:{pad(seconds % 60)}</span></div></div>
       <div className="exam-progress" aria-label="التقدم"><div className="flex justify-between text-sm text-muted-foreground"><span>التقدم في الورقة</span><span>{answered} / {total}</span></div><div className="exam-progress-bar"><span style={{ width: `${(answered / total) * 100}%` }} /></div></div>

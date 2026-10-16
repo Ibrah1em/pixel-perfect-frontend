@@ -18,7 +18,8 @@ function publicClient() {
   } } });
 }
 export const listExams = createServerFn({ method: 'GET' }).handler(async () => {
-  const { data, error } = await publicClient().from('physics_exams').select('id,title,duration_minutes,question_count').order('created_at', { ascending: false });
+  setResponseHeader('Cache-Control', 'no-store');
+  const { data, error } = await publicClient().from('physics_exams').select('id,title,duration_minutes,question_count,is_closed').order('created_at', { ascending: false });
   if (error) throw new Error('تعذر تحميل الامتحانات');
   return data;
 });
@@ -58,9 +59,10 @@ export const uploadQuestionImage = createServerFn({ method: 'POST' }).inputValid
 export const getPublishedExam = createServerFn({ method: 'GET' }).inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input)).handler(async ({ data }) => {
   setResponseHeader('Cache-Control', 'no-store');
   const client = publicClient();
-  const { data: exam, error } = await client.from('physics_exams').select('id,title,duration_minutes').eq('id', data.id).maybeSingle();
+  const { data: exam, error } = await client.from('physics_exams').select('id,title,duration_minutes,is_closed').eq('id', data.id).maybeSingle();
   if (error) throw new Error('تعذر تحميل الامتحان');
   if (!exam) return null;
+  if (exam.is_closed) return { ...exam, questions: [] };
   const { data: rows, error: questionError } = await client.from('physics_questions').select('id,text,marks,options,image_path,position').eq('exam_id', exam.id).order('position');
   if (questionError) throw new Error('تعذر تحميل الأسئلة');
   // Privileged signing is limited to image paths already authorized by public exam RLS.
@@ -106,4 +108,19 @@ export const deleteExam = createServerFn({ method: 'POST' }).inputValidator((inp
   const { error } = await supabaseAdmin.from('physics_exams').delete().eq('id', data.id);
   if (error) throw new Error('تعذر حذف الامتحان');
   return { ok: true };
+});
+
+export const setExamClosed = createServerFn({ method: 'POST' }).inputValidator((input: unknown) => z.object({ id: z.string().uuid(), closed: z.boolean() }).parse(input)).handler(async ({ data }) => {
+  await requireTeacher();
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+  const { data: updated, error } = await supabaseAdmin.from('physics_exams').update({ is_closed: data.closed }).eq('id', data.id).select('id').maybeSingle();
+  if (error || !updated) throw new Error('تعذر تغيير حالة الامتحان');
+  return { ok: true };
+});
+
+export const checkExamAdmission = createServerFn({ method: 'POST' }).inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input)).handler(async ({ data }) => {
+  setResponseHeader('Cache-Control', 'no-store');
+  const { data: exam, error } = await publicClient().from('physics_exams').select('is_closed').eq('id', data.id).maybeSingle();
+  if (error || !exam) throw new Error('تعذر دخول الامتحان');
+  return { closed: exam.is_closed };
 });

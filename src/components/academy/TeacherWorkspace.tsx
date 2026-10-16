@@ -3,11 +3,11 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
 import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { examsQuery } from '@/lib/exams.queries';
-import { ArrowRight, BarChart3, Check, Home, ImagePlus, LoaderCircle, Plus, Trash2, Upload, X } from 'lucide-react';
+import { ArrowRight, BarChart3, Check, Home, ImagePlus, LoaderCircle, LockKeyhole, LockKeyholeOpen, Plus, Trash2, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PhysicsMotion } from './PhysicsMotion';
 import { examSchema, type QuestionDraft } from '@/lib/exam-schemas';
-import { publishExam, uploadQuestionImage, deleteExam } from '@/lib/exams.functions';
+import { publishExam, uploadQuestionImage, deleteExam, setExamClosed } from '@/lib/exams.functions';
 import { optimizeQuestionImage } from '@/lib/optimize-image';
 
 export function TeacherShell({ children }: { children: ReactNode }) {
@@ -28,8 +28,20 @@ export function TeacherWorkspace({ editor = false }: { editor?: boolean }) {
 function TeacherHome() {
   const { data: exams } = useSuspenseQuery(examsQuery());
   const remove = useServerFn(deleteExam);
+  const changeClosed = useServerFn(setExamClosed);
+  const [changing, setChanging] = useState('');
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState('');
+  async function onToggle(id: string, closed: boolean) {
+    if (changing || deleting) return;
+    setChanging(id);
+    try {
+      await changeClosed({ data: { id, closed } });
+      await queryClient.invalidateQueries({ queryKey: ['published-exams'] });
+      queryClient.removeQueries({ queryKey: ['published-exam', id] });
+    } catch { window.alert('تعذر تغيير حالة الامتحان، حاول مرة أخرى'); }
+    finally { setChanging(''); }
+  }
   async function onDelete(id: string, title: string) {
     if (deleting || !window.confirm(`حذف امتحان "${title}" نهائياً مع كل درجاته؟`)) return;
     setDeleting(id);
@@ -39,7 +51,7 @@ function TeacherHome() {
   }
   return <>
     <div className="teacher-create"><h1>إنشاء اختبار</h1><Button asChild><Link to="/teacher-create"><Plus size={18} />إنشاء اختبار</Link></Button></div>
-    {exams.length > 0 && <section className="teacher-grades-list"><h2>درجات الامتحانات</h2>{exams.map(e => <div key={e.id} className="grades-exam-row"><Link to="/teacher-grades/$examId" params={{ examId: e.id }} className="grades-exam-link"><BarChart3 size={20} /><span>درجات الامتحان</span><strong>{e.title}</strong></Link><Button type="button" variant="ghost" size="icon" title="حذف الامتحان" aria-label={`حذف امتحان ${e.title}`} disabled={deleting === e.id} onClick={() => onDelete(e.id, e.title)}>{deleting === e.id ? <LoaderCircle size={18} className="animate-spin" /> : <Trash2 size={18} />}</Button></div>)}</section>}
+    {exams.length > 0 && <section className="teacher-grades-list"><h2>درجات الامتحانات</h2>{exams.map(e => <div key={e.id} className="grades-exam-row"><Link to="/teacher-grades/$examId" params={{ examId: e.id }} className="grades-exam-link"><BarChart3 size={20} /><span>درجات الامتحان</span><strong>{e.title}</strong>{e.is_closed && <span>مقفول</span>}</Link><Button type="button" variant="outline" size="icon" title={e.is_closed ? 'فتح الامتحان' : 'قفل الامتحان'} aria-label={`${e.is_closed ? 'فتح' : 'قفل'} امتحان ${e.title}`} disabled={Boolean(changing || deleting)} onClick={() => onToggle(e.id, !e.is_closed)}>{changing === e.id ? <LoaderCircle size={18} className="animate-spin" /> : e.is_closed ? <LockKeyholeOpen size={18} /> : <LockKeyhole size={18} />}</Button><Button type="button" variant="ghost" size="icon" title="حذف الامتحان" aria-label={`حذف امتحان ${e.title}`} disabled={Boolean(deleting || changing)} onClick={() => onDelete(e.id, e.title)}>{deleting === e.id ? <LoaderCircle size={18} className="animate-spin" /> : <Trash2 size={18} />}</Button></div>)}</section>}
   </>;
 }
 

@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Add persistent teacher-controlled exam closing/reopening and verify public visibility and blocked new entry.
 - [x] Simplify teacher page and create a complete exam editor.
 - [x] Persist published exams, question marks, answers and optimized images securely.
 - [x] Show published exams on home and load their questions for students.

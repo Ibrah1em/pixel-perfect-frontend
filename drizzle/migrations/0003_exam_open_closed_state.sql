@@ -1,0 +1,2 @@
+ALTER TABLE public.physics_exams ADD COLUMN is_closed boolean NOT NULL DEFAULT false;
+COMMENT ON COLUMN public.physics_exams.is_closed IS 'Teacher-controlled admission: listed publicly but new attempts cannot open while closed.';
