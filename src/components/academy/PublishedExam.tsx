@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { useServerFn } from '@tanstack/react-start';
 import { CheckCircle2, ChevronLeft, ChevronRight, Clock, LoaderCircle, LockKeyhole, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { examQuery } from '@/lib/exams.queries';
-import { gradeExam, checkExamAdmission } from '@/lib/exams.functions';
 import { PhysicsMotion } from './PhysicsMotion';
 import { TeacherLogin } from './TeacherLogin';
+import { createClient } from '@supabase/supabase-js';
+
+// إنشاء عميل Supabase مباشر للمتصفح لتجاوز مشاكل السيرفر على Vercel
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 function shuffle<T>(items: T[]): T[] { const a = [...items]; const r = new Uint32Array(a.length); crypto.getRandomValues(r); for (let i = a.length - 1; i > 0; i--) { const j = r[i]! % (i + 1); [a[i], a[j]] = [a[j]!, a[i]!]; } return a; }
 const pad = (n: number) => n.toString().padStart(2, '0');
@@ -18,7 +23,6 @@ export function PublishedExam({ id }: { id: string }) {
   const [entryError, setEntryError] = useState('');
   const [closed, setClosed] = useState(false);
   const [entering, setEntering] = useState(false);
-  const admission = useServerFn(checkExamAdmission);
   const [current, setCurrent] = useState(0);
   const [saved, setSaved] = useState<Record<string, number>>({});
   const [choice, setChoice] = useState<number | undefined>(undefined);
@@ -27,7 +31,6 @@ export function PublishedExam({ id }: { id: string }) {
   const [error, setError] = useState('');
   const [warning, setWarning] = useState('');
   const [pending, setPending] = useState(false);
-  const grade = useServerFn(gradeExam);
   const deadline = useRef(0);
   const savedRef = useRef(saved);
   savedRef.current = saved;
@@ -45,15 +48,38 @@ export function PublishedExam({ id }: { id: string }) {
   const question = order[current];
   useEffect(() => { if (question) setChoice(savedRef.current[question.id]); setWarning(''); }, [question]);
 
+  // تسليم الامتحان مباشرة عبر Supabase
   async function submit(timedOut: boolean) {
     if (!student || submitting.current || done) return;
     submitting.current = true; setPending(true); setError('');
-    try { await grade({ data: { id, studentName: student.name, className: student.className, timedOut, answers: savedRef.current } }); setDone(true); }
-    catch { setError('تعذر تسليم الامتحان، حاول مرة أخرى'); submitting.current = false; }
-    finally { setPending(false); }
+    try {
+      const { error: insertError } = await supabase
+        .from('physics_submissions')
+        .insert({
+          exam_id: id,
+          student_name: student.name,
+          class_name: student.className,
+          answers: savedRef.current,
+          score: 0,
+          total: exam.questions.length,
+          timed_out: timedOut
+        });
+
+      if (insertError) throw insertError;
+      setDone(true);
+    }
+    catch { 
+      setError('تعذر تسليم الامتحان، حاول مرة أخرى'); 
+      submitting.current = false; 
+    }
+    finally { 
+      setPending(false); 
+    }
   }
+
   useEffect(() => { if (student && seconds === 0 && !done) void submit(true); }, [seconds, student, done]);
 
+  // التحقق من حالة الامتحان ودخوله مباشرة عبر Supabase
   async function enter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (entering) return;
@@ -64,11 +90,23 @@ export function PublishedExam({ id }: { id: string }) {
     if (!className) { setEntryError('اكتب اسم الفصل'); return; }
     setEntryError(''); setEntering(true);
     try {
-      const result = await admission({ data: { id } });
-      if (result.closed) { setClosed(true); return; }
+      const { data, error } = await supabase
+        .from('physics_exams')
+        .select('is_closed')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error || !data || data.is_closed) { 
+        setClosed(true); 
+        return; 
+      }
       setStudent({ name, className });
-    } catch { setEntryError('تعذر دخول الامتحان، حاول مرة أخرى'); }
-    finally { setEntering(false); }
+    } catch { 
+      setEntryError('تعذر دخول الامتحان، حاول مرة أخرى'); 
+    }
+    finally { 
+      setEntering(false); 
+    }
   }
 
   function saveAndNext() {
