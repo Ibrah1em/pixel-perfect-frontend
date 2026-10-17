@@ -6,23 +6,10 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-// Configure Nitro to target Vercel so TanStack Start server functions are emitted in a
-// Vercel-compatible build output. We keep the existing `server.entry` override and
-// add the Nitro preset both under `tanstackStart` and at the top-level to be resilient
-// to how the wrapper merges configuration.
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
-    // Request Nitro to build with the Vercel preset so the output matches Vercel's
-    // Serverless / Build Output API expectations.
-    nitro: {
-      preset: "vercel",
-    },
-  },
-  // Some wrappers merge top-level Nitro config; include it here as well for safety.
-  nitro: {
-    preset: "vercel",
   },
 });
